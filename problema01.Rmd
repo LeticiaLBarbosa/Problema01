@@ -1,0 +1,150 @@
+---
+title: "Problema 01"
+author: "Leticia Barbosa"
+date: "Wednesday, October 15, 2014"
+output: html_document
+---
+
+**Questão 1:**
+
+Inicialmente Hans Rosling faz uma pergunta a partir de discussão com seus alunos, o mundo realmente está dividido em mundo ocidental norte rico e o resto do mundo pobre? Para responder essa pergunta inicial ele realiza uma coleta de dados de 40 anos relacionando os tamanhos das famílias com a longevidade da população de todos os países do mundo. A partir da análise desses dados ele percebe que ao longo dos anos os países de terceiro mundo vão se aproximando dos países ricos, sendo assim, esse não seria um critério que dividiria o mundo entre ricos e pobres. Insatisfeito com apenas responder sua pergunta inicial, ele coleta novos dados e relaciona-os à outros aspectos que são relevantes em cada um dos países e que poderiam influenciar a mudança desses dados ao longo dos anos, e poderiam realmente, combinados, justificar as mudanças no panorama mundial da divisão dos países entre os ricos e os pobres.
+
+**Questão 2:**
+
+```{r, echo=FALSE}
+library(ggplot2)
+dados = read.csv("C:/Users/DOCUMENTOS/Documents/Leticia/salarios-ti-regioes.csv")
+
+norte = subset(dados, Regiao == "Norte")
+nordeste = subset(dados, Regiao == "Nordeste")
+centroOeste = subset(dados, Regiao == "Centro-oeste")
+sul = subset(dados, Regiao == "Sul")
+sudeste = subset(dados, Regiao == "Sudeste")
+```
+
+**2.a**
+
+  Os dados dos profissionais estão representados da seguinte forma: cidade, estado, cargo, formação, iniciativa privada ou concursado e a região são strings, nos possibilitando classificar as pessoas que são de certa cidade, estado, região, iniciativa privada ou concursado, porém não conseguimos fazer isso com o cargo e a formação, ja que cada profissional respondeu essas carcteristicas sem seguir um padrão, havendo mais de uma string para indicar uma mesma formação ou cargo; salário bruto, horas diárias de trabalho, tempo de empresa,  tempo de experiência são inteiros em que as variáveis que medem tempo são nas unidades de horas, anos, anos, respectivamente;se possui pós graduação ou certificação que são booleanas podendo ser TRUE ou FALsE.
+
+**2.b**
+
+  Por meio da manipulação desses dados podemos tentar extrais algumas informações sobre os profissionais de TI no Brasil. Por exemplo:
+
+- Qual a quantidade de profissionais de TI em cada região?
+  
+  Pela análise dos dados percebemos que existe uma concentração maior de profissionais na região Sudeste e uma grande minoria na região Norte.
+  
+```{r,echo=FALSE, fig.height=4}
+table(dados$Regiao)
+plot(dados$Regiao)
+```
+
+- A maioria dos profissionais são concursados?
+
+  Observando a tabela e graficos abaixo vemos que a maioria dos profissionais são de iniciativa privada, e que essa característica se repete se analisarmos individualmente cada uma das regiões, exceto Centro-Oeste e Norte, em que a maior parte dos profissionais são concursados.
+
+```{r, echo=FALSE,fig.height=4}
+situacao = as.data.frame(table(sudeste$Iniciativa.Privada.ou.Concursado))
+situacao.reg = as.data.frame(table(dados$Regiao,dados$Iniciativa.Privada.ou.Concursado))
+
+table(dados$Iniciativa.Privada.ou.Concursado)
+
+ggplot(data=situacao, aes(x=Var1, y=Freq, fill=Var1))+ geom_bar(colour="black", 
+stat="identity")+
+ guides(fill=FALSE)
+
+ggplot(situacao.reg, aes(x = Var1, y = Freq, fill=Var2)) + geom_bar(position='dodge',stat="identity")
+
+```
+  
+  Como no Sudeste está a maior concentração de profissionais e eles são, maior parte de iniciativa privada, torna-se interessante descobrir se esses profissionais são bem qualificados ou não.
+
+```{r,echo=FALSE,fig.height=4}
+privado = as.data.frame(subset(sudeste,Iniciativa.Privada.ou.Concursado == "Iniciativa Privada"))
+table(sudeste$Iniciativa.Privada.ou.Concursado)
+
+t1 = as.data.frame(table(privado$Pos.Graduacao.ou.Certificacao))
+percent_naocert = (t1[1,2]/80)*100
+percet_cert = 100 - percent_naocert
+
+ggplot(data=t1, aes(x=Var1, y=Freq, fill=Var1)) +
+geom_bar(colour="black", stat="identity") +
+guides(fill=FALSE)
+
+```
+  
+  Dentre os de iniciativa privada da região Sudeste percebemos que 43,75% dos profissionais, aproximadamente, possuem pós ou certificação, indicando que na região Sudeste há uma maior quantidade de profissionais mal qualificados. Mas e os concursados da região Sudeste, também são mal qualificados?
+  
+```{r,echo=FALSE,fig.height=4}
+concursado = as.data.frame(subset(sudeste,Iniciativa.Privada.ou.Concursado == "Concursado"))
+
+t2 = as.data.frame(table(concursado$Pos.Graduacao.ou.Certificacao))
+percent_naocert2 = (t2[1,2]/8)*100
+percet_cert2 = 100 - percent_naocert2
+
+ggplot(data=t2, aes(x=Var1, y=Freq, fill=Var1)) +
+geom_bar(colour="black", stat="identity") +
+guides(fill=FALSE)
+```
+
+  Com o gráfico acima, percebemos que a situação se repete, em que mesmo os concursados do Sudeste não possuem certificação, sendo um total de 25% dos profissionais.
+  
+- Como descobrimos que a região Sudeste é a que mais possui profissionais, porém sua grande maioria é de profissionais mais mal qualificados, qual seria a região que seria mais bem qualificada?
+
+  Observando proporcionalmente à quantidade de profissionais de TI de cada região, percebemos que a região com maior percentual de certificação é a região Sul, com 69,23% dos profissionais com pós graduação ou certificação, seguida da região Centro-Oeste, com 68,42%.
+  
+```{r,echo=FALSE,fig.height=4}
+
+qualificacao = as.data.frame(table(dados$Regiao,dados$Pos.Graduacao.ou.Certificacao))
+
+
+certificacaoSudeste = subset(sudeste, Pos.Graduacao.ou.Certificacao == "TRUE")
+certificacaoSul = subset(sul, Pos.Graduacao.ou.Certificacao == "TRUE")
+certificacaoCentroOeste = subset(centroOeste, Pos.Graduacao.ou.Certificacao == "TRUE")
+certificacaoNorte = subset(norte, Pos.Graduacao.ou.Certificacao == "TRUE")
+certificacaoNordeste = subset(nordeste, Pos.Graduacao.ou.Certificacao == "TRUE")
+
+percentualCertificacaoSudeste = nrow(certificacaoSudeste)/(nrow(sudeste))
+percentualCertificacaoSul = nrow(certificacaoSul)/(nrow(sul))
+percentualCertificacaoCentroOeste = nrow(certificacaoCentroOeste)/(nrow(centroOeste))
+percentualCertificacaoNorte = nrow(certificacaoNorte)/(nrow(norte))
+percentualCertificacaoNordeste = nrow(certificacaoNordeste)/(nrow(nordeste))
+
+data_frame_percentual = data.frame(regiao = c("Sudeste", "Sul", "Centro-oeste", "Norte", "Nordeste"), percentual = c(percentualCertificacaoSudeste * 100, percentualCertificacaoSul * 100, percentualCertificacaoCentroOeste * 100, percentualCertificacaoNorte * 100, percentualCertificacaoNordeste * 100))
+
+ggplot(data_frame_percentual, aes(x = regiao, y = percentual, fill=regiao)) + geom_bar(position='dodge',stat="identity") + guides(fill=FALSE)
+```
+
+**Questão 3:**
+
+  Os salários não estão bem distribuídos, visto que, ao observar o gráfico (boxplot) nota-se que há uma concentração de valores em uma pequena região, denotando-se que existe uma concentração maior de pessoas em uma faixa de salário, e encontra-se também salários que estão em regiões muito distantes dessa faixa de concentração, havendo portanto presença de *outliers*.
+
+```{r,echo=FALSE,fig.height=4}
+summary(dados$Salario.Bruto)
+boxplot(dados$Salario.Bruto)
+
+```
+
+**Questão 4:**
+
+  Em parte sim, pois até 50% dos dados a média salarial está numa faixa que eu esperava de R$3500,00, mas analisando os dados mais profundamente, não esperava que houvesse uma disparidade tão grande de alguns salários, mesmo que esses profissionais tenham uma qualificação melhor, salientando também que as pessoas que mais recebiam tinham uma carga de horas diárias menor que as que ganham menos.
+  
+**Questão 5:**
+
+Caso utilizássemos a mediana o resultado seria diferente, uma vez que na média consideramos os outliers que mesmo que haja valores muito baixos nos salários, seu valor alto subirá a média, mas não necessariamente haverá profissionais que receberão o valor dessa média, dado que a concentração de salários é com valores salariais bem mais baixos que os outliers, já na mediana destaca o valor em que 50% dos salários reais estão abaixo ou acima daquele valor, dando uma confiabilidade maior ao resultado.
+
+- **Média:**
+
+```{r,echo=FALSE}
+media_salarial = sort(tapply(dados$Salario.Bruto, dados$Regiao, mean), decreasing = TRUE)
+write.csv(media_salarial,"MEDIA_salarial_por_regiao.csv")
+```
+
+- **Mediana:**
+```{r,echo=FALSE}
+mediana_salarial = sort(tapply(dados$Salario.Bruto, dados$Regiao, median), decreasing = TRUE)
+write.csv(mediana_salarial,"MEDIANA_salarial_por_regiao.csv")
+```
+**Questão 6:**
+
+Para os profissionais que gostariam de ganhar um salário melhor, pela análise geral dos dados, seria aconselhável que ele se mude para a região Centro-oeste, tenha alguma certificação (pós, graduação ou certificação) e seja concursado.
